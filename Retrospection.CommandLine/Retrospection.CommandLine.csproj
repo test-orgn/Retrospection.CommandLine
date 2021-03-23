@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <AssemblyVersion>0.0.1.0002</AssemblyVersion>
+    <FileVersion>0.0.1.0002</FileVersion>
+    <Version>0.0.1.0002</Version>
+    <Company>Retrospection Software Ltd</Company>
+    <Description>Command Line parsers, utilities and helpers</Description>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Copyright>© 2021 Alex Clark, Retrospection Software Ltd</Copyright>
+    <PackageLicenseFile>License.txt</PackageLicenseFile>
+    <PackageReleaseNotes>Initial Release to NuGet</PackageReleaseNotes>
+    <PackageTags>command line parser utilities menu helper validation</PackageTags>
+    <PackageIcon>iconfinder_19.arrow_3044652.png</PackageIcon>
+    <NeutralLanguage />
+    <Authors>Alex Clark</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="D:\My Documents\iconfinder_19.arrow_3044652.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="D:\Work\License.txt">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
