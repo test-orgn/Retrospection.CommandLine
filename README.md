@@ -1,5 +1,9 @@
 # Retrospection.CommandLine
 
+### Version 0.0.1.0003 Release Notes
+- Added more XML comments to source
+- Added a SampleUseCases project to the repo
+
 ### Version 0.0.1.0002 Release Notes
 - Added XML comments to source
 - Created this documentation for NuGet page
