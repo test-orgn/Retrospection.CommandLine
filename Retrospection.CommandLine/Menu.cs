@@ -271,6 +271,7 @@ namespace Retrospection.CommandLine
             var curBClr = Console.BackgroundColor;
             var curFClr = Console.ForegroundColor;
 
+            Console.ForegroundColor = foreColor;
             Console.BackgroundColor = backColor;
             Console.Write(draw);
 

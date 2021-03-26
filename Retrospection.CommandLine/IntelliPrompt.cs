@@ -556,5 +556,6 @@ namespace Retrospection.CommandLine
 
             return ret;
         }
+
     }
 }

@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace Retrospection.CommandLine
 {
-    public class ActionInferer<TModel> where TModel : class
+    public sealed class ActionInferer<TModel> where TModel : class
     {
         // TODO: require -- prefix for props but not for commands
 

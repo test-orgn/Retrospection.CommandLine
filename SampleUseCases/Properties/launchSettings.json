@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SampleUseCases": {
+      "commandName": "Project",
+      "commandLineArgs": "showhelp --name=\"Retrospection Software\""
+    }
+  }
+}
