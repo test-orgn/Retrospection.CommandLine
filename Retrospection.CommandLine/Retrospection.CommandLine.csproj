@@ -3,16 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>9.0</LangVersion>
-    <AssemblyVersion>0.0.1.0003</AssemblyVersion>
-    <FileVersion>0.0.1.0003</FileVersion>
-    <Version>0.0.1.0003</Version>
+    <AssemblyVersion>0.0.1.0004</AssemblyVersion>
+    <FileVersion>0.0.1.0004</FileVersion>
+    <Version>0.0.1.0004</Version>
     <Company>Retrospection Software Ltd</Company>
     <Description>Command Line parsers, utilities and helpers</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Copyright>© 2021 Alex Clark, Retrospection Software Ltd</Copyright>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
-    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageReleaseNotes>Bugfixes and one breaking change - parameter order in the IntelliPrompt constructor has changed.</PackageReleaseNotes>
     <PackageTags>command line parser utilities menu helper validation parameter method mapping</PackageTags>
     <PackageIcon>iconfinder_19.arrow_3044652.png</PackageIcon>
     <NeutralLanguage />

@@ -17,7 +17,41 @@ namespace SampleUseCases
                 ai.Invoke();
             }
 
-            Console.WriteLine("\r\n\r\n -- More samples to follow soon");
+            Console.WriteLine("\r\n\r\n -- More samples to follow soon\r\n");
+            
+            string[] commands = { "Simple", "Validation", "Dates", "HelpText", "Quit" };
+
+            var prompter = new IntelliPrompt(commands);
+
+            while (true)
+            {
+                var cmd = prompter.ReadLine("$ ")
+                    .ToLower();
+                
+                if (cmd == "simple")
+                {
+                    // create a simple class and argify some params to send to it
+                    var simpleArgs = IntelliPrompt.Argify("--s howmanytimes=3 --d name=Girtrude");
+                    var simpleInvoker = new ActionInferer<Simple>(simpleArgs, new Simple());
+                    simpleInvoker.Invoke();
+                }
+                else if(cmd == "validation")
+                {
+                    // class that shows various validation methods
+                }
+                else if (cmd == "dates")
+                {
+                    // class that shows date interpreter methods
+                }
+                else if (cmd == "helptext")
+                {
+                    // class that shows various methods with helptext and generates it
+                }
+                else if (cmd == "quit")
+                {
+                    return;
+                }
+            }
         }
 
         [Cmd] 

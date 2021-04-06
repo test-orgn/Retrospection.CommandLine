@@ -41,7 +41,7 @@ namespace Retrospection.CommandLine
 
             if (!(PreValidater?.Invoke(args) ?? true)) return;
 
-            _args = args;
+            _args = args ?? Array.Empty<string>();
             _model = model;
             _modelType = typeof(TModel);
 
@@ -49,10 +49,10 @@ namespace Retrospection.CommandLine
             if (_model != null) bindingFlags |= BindingFlags.Instance;
 
             // Get a list of all possible aliases
-            _aliases = GetAliases(_modelType);
+            _aliases = GetAliases(bindingFlags);
 
             // Convert args to a dictionary
-            _parameters = GetParameters(args);
+            _parameters = GetParameters(_args);
 
             if (!(ParamsValidater?.Invoke(_parameters) ?? true)) return;
 
@@ -188,12 +188,12 @@ namespace Retrospection.CommandLine
 
             return ret;
         }
-        private Dictionary<string, string> GetAliases(Type t)
+        private Dictionary<string, string> GetAliases(BindingFlags bindingFlags)
         {
-            var allMethods = t.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+            var allMethods = _modelType.GetMethods(bindingFlags)
                 .Where(method => !string.IsNullOrWhiteSpace(method.GetCustomAttribute<CmdAttribute>()?.Alias));
 
-            var allProps = t.GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.NonPublic)
+            var allProps = _modelType.GetProperties(bindingFlags | BindingFlags.FlattenHierarchy)
                 .Where(prop => !string.IsNullOrWhiteSpace(prop.GetCustomAttribute<PrmAttribute>()?.Alias));
 
             var allParameters = allMethods
@@ -327,7 +327,7 @@ namespace Retrospection.CommandLine
             var mapped = args
                 .Select(arg => arg.Split('='))
                 .ToDictionary(
-                    parts => parts[0].StartsWith("--") ? parts[0][2..] : parts[0],
+                    parts => GetParamKey(parts),
                     parts => parts.Length > 1 ? string.Join('=', parts.Skip(1)) : string.Empty,
                     _stringComparer);
 
@@ -343,6 +343,21 @@ namespace Retrospection.CommandLine
             }
 
             return mapped;
+        }
+        private string GetParamKey(IEnumerable<string> parts)
+        {
+            if (parts.First().StartsWith("--"))
+            {
+                return parts.First()[2..];      // Strip leading --
+            }
+            else if (parts.First().StartsWith('-'))
+            {
+                return parts.First()[1..];      // Strip leading -
+            }
+            else
+            {
+                return parts.First();
+            }
         }
         private void MapParametersToProperties(Dictionary<string, string> parameters, IEnumerable<PropertyInfo> allProps)
         {

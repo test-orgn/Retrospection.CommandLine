@@ -66,6 +66,8 @@ namespace Retrospection.CommandLine
         /// </summary>
         public AutoCompleteMode AutoCompleteMode { get; set; }
 
+        public StringComparison StringComparison { get; set; } = StringComparison.OrdinalIgnoreCase;
+
         /// <summary>
         /// A callback which will be called when the prompt requires a list of AutoComplete options.  Only used if the AutoCompleteMode property is set to Custom.
         /// </summary>
@@ -97,13 +99,19 @@ namespace Retrospection.CommandLine
         /// <summary>
         /// Initializes a new instance of the IntelliPrompt class
         /// </summary>
+        /// <param name="commands">A collection of strings to be used as the available auto-complete commands which can be accessed by the Tab key.</param>
+        public IntelliPrompt(params string[] commands) : this(commands, null, null) { }
+
+        /// <summary>
+        /// Initializes a new instance of the IntelliPrompt class
+        /// </summary>
         /// <param name="commandHistory">A collection of strings to be used as the command history which can be accessed by the Up-Arrow key.</param>
         /// <param name="commands">A collection of strings to be used as the available auto-complete commands which can be accessed by the Tab key.</param>
         /// <param name="separatorChars">A collection of strings to be used as word-boundary separators for cursor-navigation events using Ctrl+Left-Arrow or Ctrl+Right-Arrow.
         ///   If this is not specified, Char.IsSeparator is used to determine word-boundaries.</param>
         public IntelliPrompt(
-            IEnumerable<string> commandHistory,
             IEnumerable<string> commands,
+            IEnumerable<string> commandHistory,
             IEnumerable<char> separatorChars) : this()
         {
             _history.AddRange(commandHistory ?? Array.Empty<string>());
@@ -136,6 +144,7 @@ namespace Retrospection.CommandLine
 
                 if (key.Key == ConsoleKey.Enter)
                 {
+                    Console.WriteLine();
                     return AcceptInput();
                 }
                 else if (key.Key == ConsoleKey.Tab)
@@ -504,8 +513,8 @@ namespace Retrospection.CommandLine
 
             IEnumerable<string> possibilities = AutoCompleteMode switch
             {
-                AutoCompleteMode.StartsWith => _commands.Where(c => c.StartsWith(_autoCompleteSearch)),
-                AutoCompleteMode.Contains => _commands.Where(c => c.Contains(_autoCompleteSearch)),
+                AutoCompleteMode.StartsWith => _commands.Where(c => c.StartsWith(_autoCompleteSearch, StringComparison)),
+                AutoCompleteMode.Contains => _commands.Where(c => c.Contains(_autoCompleteSearch, StringComparison)),
                 AutoCompleteMode.Custom => OnAutoComplete?.Invoke(_autoCompleteSearch) ?? Array.Empty<string>(),
                 _ => Array.Empty<string>()
             };
