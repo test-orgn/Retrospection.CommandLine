@@ -1,5 +1,12 @@
 # Retrospection.CommandLine
 
+### Version 0.0.1.0004 Release Notes
+- **Breaking change** - changed the order of parameters in the IntelliPrompt constructor
+- Started expanding SampleUseCases
+- BugFixes in the ActionInferrer class (it wasn't looking up instance methods to invoke)
+- AutoComplete on the IntelliPrompt class uses the new StringComparer property and defaults to OrdinalIgnoreCase
+
+
 ### Version 0.0.1.0003 Release Notes
 - Added more XML comments to source
 - Added a SampleUseCases project to the repo
