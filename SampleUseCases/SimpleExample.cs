@@ -1,15 +1,11 @@
 ﻿
 using Retrospection.CommandLine;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 
 namespace SampleUseCases
 {
-    class Simple
+    class SimpleExample
     {
         [Cmd(Alias = "s", Order = 2)]
         static void SomethingToDo(int howManyTimes)

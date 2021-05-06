@@ -41,7 +41,7 @@ namespace Retrospection.CommandLine
         private string _autoCompleteSearch;
         private int _autoCompleteCursor;
         private List<string> _history;
-        private List<string> _commands;
+        private Dictionary<string, string> _commands;
         private List<char> _separatorChars;
         private Menu _menu;
         private string _prompt;
@@ -54,7 +54,7 @@ namespace Retrospection.CommandLine
         /// <summary>
         /// Gets a list of possible commands to be used for AutoComplete.
         /// </summary>
-        public IEnumerable<string> Commands { get => _commands; }
+        public IDictionary<string, string> Commands { get => _commands; }
 
         /// <summary>
         /// Gets the list of SeparatorChars to be used as word-boundaries for cursor navigation.  If unspecified, Char.IsSeparator is used to detect word boundaries instead.
@@ -71,7 +71,7 @@ namespace Retrospection.CommandLine
         /// <summary>
         /// A callback which will be called when the prompt requires a list of AutoComplete options.  Only used if the AutoCompleteMode property is set to Custom.
         /// </summary>
-        public Func<string, IEnumerable<string>> OnAutoComplete { get; set; }
+        public Func<string, IDictionary<string, string>> OnAutoComplete { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the IntelliPrompt class
@@ -80,8 +80,8 @@ namespace Retrospection.CommandLine
         {
             _backColor = Console.BackgroundColor;
             _foreColor = Console.ForegroundColor;
-            _history = new List<string>();
-            _commands = new List<string>();
+            _history = new();
+            _commands = new();
             _separatorChars = new List<char>();
 
             _menu = new Menu(_commands, null, 10)
@@ -91,7 +91,7 @@ namespace Retrospection.CommandLine
                 RegularTextColor = ConsoleColor.Gray,
                 SelectedTextColor = ConsoleColor.White
             };
-            _menu.OnSelectedItemChanged = () => SetScreenInput(_menu.SelectedItem);
+            _menu.OnSelectedItemChanged = () => SetScreenInput(_menu.SelectedText);
 
             ResetAutoCompleteState();
         }
@@ -100,7 +100,9 @@ namespace Retrospection.CommandLine
         /// Initializes a new instance of the IntelliPrompt class
         /// </summary>
         /// <param name="commands">A collection of strings to be used as the available auto-complete commands which can be accessed by the Tab key.</param>
-        public IntelliPrompt(params string[] commands) : this(commands, null, null) { }
+        public IntelliPrompt(params string[] commands) : this(ConvertToDictionary(commands), null, null) { }
+
+        public IntelliPrompt(params (string, string)[] commands) : this(commands.ToDictionary(c => c.Item1, c => c.Item2), null, null) { }
 
         /// <summary>
         /// Initializes a new instance of the IntelliPrompt class
@@ -110,15 +112,14 @@ namespace Retrospection.CommandLine
         /// <param name="separatorChars">A collection of strings to be used as word-boundary separators for cursor-navigation events using Ctrl+Left-Arrow or Ctrl+Right-Arrow.
         ///   If this is not specified, Char.IsSeparator is used to determine word-boundaries.</param>
         public IntelliPrompt(
-            IEnumerable<string> commands,
+            IDictionary<string, string> commands,
             IEnumerable<string> commandHistory,
             IEnumerable<char> separatorChars) : this()
         {
             _history.AddRange(commandHistory ?? Array.Empty<string>());
             _historyCursor = _history.Count;
             _separatorChars.AddRange(separatorChars ?? Array.Empty<char>());
-            _commands.AddRange(commands ?? Array.Empty<string>());
-            _commands.Sort();
+            _commands.AddRange(commands ?? new Dictionary<string, string>());
         }
 
         /// <summary>
@@ -258,6 +259,27 @@ namespace Retrospection.CommandLine
             }
         }
 
+        public (string command, string[] parameters) ReadCommand() => ReadCommand("");
+        public (string command, string[] parameters) ReadCommand(string prompt, string textIfInvalid = "Unknown Command: '$1'")
+        {
+            while (true)
+            {
+                var input = ReadLine(prompt);
+                var parts = Argify(input).ToArray();
+
+                if (parts.Any() && _commands.Values.Contains(parts[0]))
+                {
+                    var key = _commands.Where(kvp => kvp.Value == parts[0]).First().Key;
+                    var parameters = parts.Skip(1).ToArray();
+                    return new(key, parameters);
+                }
+                else if (parts.Any())
+                {
+                    Console.WriteLine(textIfInvalid.Replace("$1", parts.First()));
+                }
+            }
+        }
+
         private void HandleSpecialInput(ConsoleKeyInfo key)
         {
             if (key.Key == ConsoleKey.Applications)
@@ -265,10 +287,6 @@ namespace Retrospection.CommandLine
                 _menu.RedrawMenu(GetAutoCompletePossibilities(), null, 10);
                 return;
             }
-
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"{key.Modifiers} {key.Key}");
-            Console.ForegroundColor = _foreColor;
         }
         private void AddToInput(ConsoleKeyInfo key)
         {
@@ -504,19 +522,19 @@ namespace Retrospection.CommandLine
 
             if (possibilities.Any())
             {
-                SetScreenInput(possibilities.ToArray()[_autoCompleteCursor]);
+                SetScreenInput(possibilities.Values.ToArray()[_autoCompleteCursor]);
             }
         }
-        private IEnumerable<string> GetAutoCompletePossibilities()
+        private IDictionary<string, string> GetAutoCompletePossibilities()
         {
             if (_autoCompleteSearch == null) _autoCompleteSearch = new string(_input.ToArray());
 
-            IEnumerable<string> possibilities = AutoCompleteMode switch
+            IDictionary<string, string> possibilities = AutoCompleteMode switch
             {
-                AutoCompleteMode.StartsWith => _commands.Where(c => c.StartsWith(_autoCompleteSearch, StringComparison)),
-                AutoCompleteMode.Contains => _commands.Where(c => c.Contains(_autoCompleteSearch, StringComparison)),
-                AutoCompleteMode.Custom => OnAutoComplete?.Invoke(_autoCompleteSearch) ?? Array.Empty<string>(),
-                _ => Array.Empty<string>()
+                AutoCompleteMode.StartsWith => _commands.Where(c => c.Value.StartsWith(_autoCompleteSearch, StringComparison)).ToDictionary(),
+                AutoCompleteMode.Contains => _commands.Where(c => c.Value.Contains(_autoCompleteSearch, StringComparison)).ToDictionary(),
+                AutoCompleteMode.Custom => OnAutoComplete?.Invoke(_autoCompleteSearch) ?? new Dictionary<string, string>(),
+                _ => new Dictionary<string, string>()
             };
 
             return possibilities;
@@ -533,6 +551,8 @@ namespace Retrospection.CommandLine
             }
         }
 
+        private static IDictionary<string, TValue> ConvertToDictionary<TValue>(IEnumerable<TValue> items) => items.Select((item, ndx) => KeyValuePair.Create(ndx.ToString(), item)).ToDictionary();
+
         /// <summary>
         /// Parses a string and returns a collection of the arguments in a way that is similar to the standard C run-time argv.
         /// </summary>
@@ -540,6 +560,8 @@ namespace Retrospection.CommandLine
         /// <returns>A collection representing the arguments.</string></returns>
         public static IEnumerable<string> Argify(string args)
         {
+            if (string.IsNullOrEmpty(args)) return Array.Empty<string>();
+
             var parts = args.Split(' ');
             var stack = new Stack<string>(args.Length);
             bool openQuotes = false;
@@ -564,6 +586,30 @@ namespace Retrospection.CommandLine
             var ret = stack.ToArray().Reverse();
 
             return ret;
+        }
+        public static DateTime GetRelativeDate(string expression)
+        {
+            // +20d or -15h for example
+            if ((expression == null) || !(expression.StartsWith('-') || expression.StartsWith('+')))
+            {
+                return DateTime.MinValue;
+            }
+
+            var multiplier = expression[0] == '-' ? -1 : 1;
+            var qty = int.Parse(expression[1..^1]);
+            var measure = expression[^1];
+
+            return measure switch
+            {
+                'y' or 'Y' => DateTime.Now.Date.AddYears(qty * multiplier),
+                'M' => DateTime.Now.Date.AddMonths(qty * multiplier),
+                'w' or 'W' => DateTime.Now.Date.AddDays(qty * multiplier * 7),
+                'd' or 'D' => DateTime.Now.Date.AddDays(qty * multiplier),
+                'h' or 'H' => DateTime.Now.AddHours(qty * multiplier),            // For time measurements we include current time, date measurements we just go with date
+                'm' => DateTime.Now.AddMinutes(qty * multiplier),
+                's' => DateTime.Now.AddSeconds(qty * multiplier),
+                _ => DateTime.Now,
+            };
         }
 
     }

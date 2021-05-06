@@ -3,18 +3,18 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>9.0</LangVersion>
-    <AssemblyVersion>0.0.1.0004</AssemblyVersion>
-    <FileVersion>0.0.1.0004</FileVersion>
-    <Version>0.0.1.0004</Version>
+    <AssemblyVersion>0.0.2.5</AssemblyVersion>
+    <FileVersion>0.0.2.5</FileVersion>
+    <Version>0.0.2.5</Version>
     <Company>Retrospection Software Ltd</Company>
     <Description>Command Line parsers, utilities and helpers</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Copyright>© 2021 Alex Clark, Retrospection Software Ltd</Copyright>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
-    <PackageReleaseNotes>Bugfixes and one breaking change - parameter order in the IntelliPrompt constructor has changed.</PackageReleaseNotes>
+    <PackageReleaseNotes>Bugfixes, updates and upgrades.</PackageReleaseNotes>
     <PackageTags>command line parser utilities menu helper validation parameter method mapping</PackageTags>
-    <PackageIcon>iconfinder_19.arrow_3044652.png</PackageIcon>
+    <PackageIcon>nugetIcon.png</PackageIcon>
     <NeutralLanguage />
     <Authors>Alex Clark</Authors>
     <PackageProjectUrl>https://github.com/RetrospectionSoftware/Retrospection.CommandLine/wiki</PackageProjectUrl>
@@ -23,7 +23,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="D:\My Documents\iconfinder_19.arrow_3044652.png">
+    <None Include="nugetIcon.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>

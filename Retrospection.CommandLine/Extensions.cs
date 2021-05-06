@@ -1,6 +1,7 @@
 ﻿
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Linq;
 
 [assembly: InternalsVisibleTo("UnitTests")]
 
@@ -16,6 +17,8 @@ namespace Retrospection.CommandLine
                 dict.Add(item.Key, item.Value);
             }
         }
+        public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> items) => items.ToDictionary(k => k.Key, k=> k.Value);
+
         public static bool ContainsUnescaped(this string expression, char value)
         {
             if (!expression.Contains(value))

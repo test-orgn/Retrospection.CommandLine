@@ -25,6 +25,7 @@ namespace Retrospection.CommandLine
         private Dictionary<string, IEnumerable<string>> _missingCombos;
         private Dictionary<string, IEnumerable<string>> _incorrectPairings;
         private Dictionary<string, IEnumerable<string>> _missingMethodParams;
+        private List<string> _missingProperties;
         private StringComparer _stringComparer = StringComparer.OrdinalIgnoreCase;
 
         public Predicate<IEnumerable<string>> PreValidater { get; set; }
@@ -72,7 +73,12 @@ namespace Retrospection.CommandLine
             // Check to see if any props were incorrectly combined, missing etc
             PopulateValidationWarnings(allProps, allMethods);
 
-            IsValid = !(_missingAtLeastOneOf != null || _missingCombos.Any() || _incorrectPairings.Any() || _missingMethodParams.Any());
+            IsValid = !(
+                _missingAtLeastOneOf != null || 
+                _missingCombos.Any() || 
+                _incorrectPairings.Any() || 
+                _missingMethodParams.Any() ||
+                _missingProperties.Any());
 
             if (!IsValid) return;
 
@@ -82,6 +88,9 @@ namespace Retrospection.CommandLine
 
         public string GetFormattedValidationText()
         {
+            var missingParams = _missingProperties
+                .Select(m => $"'{m}' is required and must be specified");
+
             var missing = _missingCombos
                 .Select(c => $"When specifying {c.Key}, {string.Join(", ", c.Value)} must also be specified");
 
@@ -92,13 +101,14 @@ namespace Retrospection.CommandLine
                 .Select(c => $"{string.Join(", ", c.Value)} cannot be combined with {c.Key}");
 
             var allErrors =
-                missing
+                missingParams
+                .Union(missing)
                 .Union(missingMethParams)
                 .Union(badCombos);
 
-            var text= string.Join("\r\n", allErrors);
-            
-            if(_missingAtLeastOneOf != null)
+            var text = string.Join("\r\n", allErrors);
+
+            if (_missingAtLeastOneOf != null)
             {
                 text = _missingAtLeastOneOf + "\r\n" + text;
             }
@@ -236,6 +246,7 @@ namespace Retrospection.CommandLine
             PopulateMissingMethodParamsValidations(allMethods, _parameters);
             PopulateMethodParamComboValidations(allMethods, _parameters);
             PopulateMethodComboValidations(_allMethods, _parameters);
+            PopulateMissingPropertiesValidations(_allProps, _parameters);
         }
         private static Dictionary<string, IEnumerable<string>> GetParamValidationFails(
             IEnumerable<MemberInfo> members,
@@ -257,11 +268,21 @@ namespace Retrospection.CommandLine
         private void PopulateMissingMethodParamsValidations(IEnumerable<MethodInfo> allMethods, Dictionary<string, string> parameters)
         {
             var missing = allMethods
-                .Select(m => (m.Name, m.GetParameters().Where(prm => (prm.GetCustomAttribute<PrmAttribute>()?.IsRequired ?? false) && !parameters.ContainsKey(prm.Name)).Select(r => r.Name)))
+                .Select(m => (m.Name, m.GetParameters()
+                             .Where(prm => (prm.GetCustomAttribute<PrmAttribute>()?.IsRequired ?? false) &&
+                                            !parameters.ContainsKey(prm.Name)).Select(r => r.Name)))
                 .Where(t => t.Item2.Any())
                 .ToDictionary(k => k.Name, k => k.Item2);
 
             _missingMethodParams = missing;
+        }
+        private void PopulateMissingPropertiesValidations(IEnumerable<PropertyInfo> allProps, Dictionary<string, string> parameters)
+        {
+            _missingProperties = allProps
+                .Where(p => (p.GetCustomAttribute<PrmAttribute>()?.IsRequired ?? false) &&
+                !parameters.ContainsKey(p.Name))
+                .Select(p => string.IsNullOrWhiteSpace(p.GetCustomAttribute<PrmAttribute>().Alias) ? p.Name : p.GetCustomAttribute<PrmAttribute>().Alias)
+                .ToList();
         }
         private void PopulateMethodParamComboValidations(IEnumerable<MethodInfo> allMethods, Dictionary<string, string> parameters)
         {
@@ -376,8 +397,8 @@ namespace Retrospection.CommandLine
             {
                 return parameter.Trim().ToLower() switch
                 {
-                    "false" or "f" or "0" or "no" or "n" => false,  // TODO: "False" aliases / ("True" also?)
-                    _ => true
+                    "true" or "t" or "1" or "yes" or "y" => true,
+                    _ => false
                 };
             }
             else if (toType == typeof(DateTime))
@@ -388,40 +409,41 @@ namespace Retrospection.CommandLine
                     "yesterday" => DateTime.Now.Date.AddDays(-1),
                     "today" => DateTime.Now.Date,
                     "tomorrow" => DateTime.Now.Date.AddDays(1),
-                    string dt when Regex.IsMatch(dt, @"^(\-|\+)[0-9]+[ymwdhs]$", RegexOptions.IgnoreCase) => GetRelativeDate(parameter.Trim()),    // passing parameter because case sensitivity is now required
+                    string dt when Regex.IsMatch(dt, @"^(\-|\+)[0-9]+[ymwdhs]$", RegexOptions.IgnoreCase) => IntelliPrompt.GetRelativeDate(parameter.Trim()),    // passing parameter because case sensitivity is now required
                     string dt => DateTime.Parse(dt),
                     _ => DateTime.MinValue,
                 };
             }
+            else if (HasTryParse(toType, out var parseMethod))
+            {
+                var prms = new object[] { parameter.Trim(), null };
+
+                var couldParse = (bool)parseMethod.Invoke(null, prms);
+                return couldParse ? prms[1] : null;
+            }
             else
             {
+
                 return Convert.ChangeType(parameter, toType);
             }
         }
-        public static DateTime GetRelativeDate(string expression)
-        {
-            // +20d or -15h for example
 
-            var multi = expression[0] == '-' ? -1 : 1;
-            var qty = int.Parse(expression[1..^1]);
-            var measure = expression[^1];
-
-            return measure switch
-            {
-                'y' or 'Y' => DateTime.Now.Date.AddYears(qty * multi),
-                'M' => DateTime.Now.Date.AddMonths(qty * multi),
-                'w' or 'W' => DateTime.Now.Date.AddDays(qty * multi * 7),
-                'd' or 'D' => DateTime.Now.Date.AddDays(qty * multi),
-                'h' or 'H' => DateTime.Now.AddHours(qty * multi),            // For time measurements we include current time, date measurements we just go with date
-                'm' => DateTime.Now.AddMinutes(qty * multi),
-                's' => DateTime.Now.AddSeconds(qty * multi),
-                _ => DateTime.Now,
-            };
-        }
         private IEnumerable<MethodInfo> GetInvokeList(Dictionary<string, string> parameters, IEnumerable<MethodInfo> allMethods)
         {
             return allMethods
                 .Where(method => parameters.ContainsKey(method.Name) && parameters[method.Name] == "");
+        }
+
+        private static bool HasTryParse(Type t, out MethodInfo tryParseMethod)
+        {
+            BindingFlags flags = BindingFlags.Public | BindingFlags.Static;
+
+            var baseT = Nullable.GetUnderlyingType(t);
+            baseT ??= t;
+
+            var methods = baseT.GetMethods(flags);
+            tryParseMethod = methods.FirstOrDefault(m => m.Name == "TryParse");
+            return tryParseMethod != null;
         }
     }
 }

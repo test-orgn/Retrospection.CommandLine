@@ -26,8 +26,8 @@ namespace Retrospection.CommandLine
         private int _widthPerItem;
         private int _menuRowStart;
         private int _menuRowEnd;
-        private List<string> _items;
-        private string _selectedItem;
+        private Dictionary<string, string> _items;
+        private string _selectedKey;
         private int _selectedIndex;
 
         // TODO: LPadding, RPadding
@@ -35,20 +35,16 @@ namespace Retrospection.CommandLine
         internal int BottomPadding { get; init; } = 0;
         internal int RowHeight { get => TopPadding + 1 + BottomPadding; }
         internal int ItemsPerRow { get; private set; }
-        internal string SelectedItem
+        internal string SelectedKey
         {
-            get => _selectedItem;
+            get => _selectedKey;
             set
             {
-                _selectedItem = value;
-                _selectedIndex = _items.IndexOf(_selectedItem);
+                _selectedKey = value;
+                _selectedIndex = _items.Keys.ToList().IndexOf(value);
             }
         }
-        internal int SelectedIndex
-        {
-            get => _selectedIndex;
-            set => _selectedIndex = value;
-        }
+        internal string SelectedText { get => _selectedKey == null ? "" : _items[_selectedKey]; }
         internal bool IsOpen
         {
             get
@@ -73,21 +69,21 @@ namespace Retrospection.CommandLine
         internal ConsoleColor RegularBackColor { get; set; } = ConsoleColor.DarkGray;
         internal ConsoleColor SelectedBackColor { get; set; } = ConsoleColor.Blue;
 
-        internal Menu(IEnumerable<string> items, string selectedItem, int itemsPerRow)
+        internal Menu(IDictionary<string, string> items, string selectedKey, int itemsPerRow)
         {
             _items = new();
             _items.AddRange(items);
-            SelectedItem = selectedItem;
+            SelectedKey = selectedKey;
             ItemsPerRow = itemsPerRow;
         }
 
-        internal void RedrawMenu(IEnumerable<string> items, string selectedItem, int itemsPerRow)
+        internal void RedrawMenu(IDictionary<string, string> items, string selectedKey, int itemsPerRow)
         {
             if (IsOpen) IsOpen = false;
 
             _items = new();
             _items.AddRange(items);
-            SelectedItem = selectedItem;
+            SelectedKey = selectedKey;
             ItemsPerRow = itemsPerRow;
 
             IsOpen = true;
@@ -100,7 +96,7 @@ namespace Retrospection.CommandLine
 
             if (_selectedIndex == -1)
             {
-                SelectMenuItem(0, true);
+                SelectMenuItem(_items.First().Key, true);
                 return;
             }
 
@@ -147,8 +143,8 @@ namespace Retrospection.CommandLine
 
             if ((newSelectedIndex != -1) && (newSelectedIndex != _selectedIndex))
             {
-                SelectMenuItem(_selectedIndex, false);
-                SelectMenuItem(newSelectedIndex, true);
+                SelectMenuItem(_selectedKey, false);
+                SelectMenuItem(_items.Keys.ToArray()[newSelectedIndex], true);
             }
         }
         private (int First, int Last, int RowNum) GetRowIndexBounds(int index)
@@ -160,12 +156,13 @@ namespace Retrospection.CommandLine
 
             return (first, last, row);
         }
-        private void SelectMenuItem(int index, bool selected)
+        private void SelectMenuItem(string key, bool selected)
         {
+            var index = _items.Keys.ToList().IndexOf(key);
             var position = GetMenuItemPosition(index);
-            DrawMenuItem(_items[index], selected, position, true);
+            DrawMenuItem(_items[key], selected, position, true);
             _selectedIndex = selected ? index : -1;
-            _selectedItem = _items[index];
+            _selectedKey = selected ? key : null;
             OnSelectedItemChanged?.Invoke();
         }
         private (int Left, int Top) GetMenuItemPosition(int index)
@@ -197,7 +194,7 @@ namespace Retrospection.CommandLine
 
                 foreach (var item in rowItems)
                 {
-                    DrawMenuItem(item, (item == _selectedItem), ConsoleEx.GetCursorPos(), false);
+                    DrawMenuItem(item.Value, (item.Key == _selectedKey), ConsoleEx.GetCursorPos(), false);
                 }
                 rowNum++;
 
@@ -259,7 +256,7 @@ namespace Retrospection.CommandLine
             }, true, true);
 
             _selectedIndex = -1;
-            _selectedItem = null;
+            _selectedKey = null;
             _isOpen = false;
         }
         private static void ClearChar(ConsoleColor color)
