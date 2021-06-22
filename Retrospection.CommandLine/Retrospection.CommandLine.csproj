@@ -33,4 +33,5 @@
     </None>
   </ItemGroup>
 RepositoryToolDetectionIdentifier
+  Argon.DataAccess.Queues.Interfaces
 </Project>
