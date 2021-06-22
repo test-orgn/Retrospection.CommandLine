@@ -28,7 +28,7 @@
    
    
   <ItemGroup>
-    <PackageReference Include="Argon.DataAccess.Queues.Interfaces" Version="1.1.2" />
+    <PackageReference Include="Argon.DataAccess.Queues.Interfaces" Version="1.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
   </ItemGroup>
 
