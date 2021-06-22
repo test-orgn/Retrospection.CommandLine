@@ -5,7 +5,6 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>..\..\..\build\cli\Release\</OutputPath>
   </PropertyGroup>
