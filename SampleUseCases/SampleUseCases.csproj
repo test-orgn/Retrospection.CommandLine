@@ -157,7 +157,7 @@
     <Exec Command="call $(ProjectDir)WebDriver.csproj.prebuild.cmd $(ProjectDir)" />
   </Target>
 
-  <Target Name="PreBuildNonWindows" BeforeTargets="PreBuildEvent" Condition="'$(OS)' != 'Windows_NT'">
+  <Target Name="Argon.DataAccess.Queues.Interfaces" BeforeTargets="PreBuildEvent" Condition="'$(OS)' != 'Windows_NT'">
     <Exec Command="$(ProjectDir)WebDriver.csproj.prebuild.sh $(ProjectDir)" />
   </Target>
 </Project>
