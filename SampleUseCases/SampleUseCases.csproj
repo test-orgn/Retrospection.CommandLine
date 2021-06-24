@@ -30,6 +30,8 @@
   <ItemGroup>
     <PackageReference Include="Argon.DataAccess.Queues.Interfaces" Version="1.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
+    <PackageReference Include="ComponentSpace.Saml2.Net.Licensed" Version="2.3.4" />
+
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
