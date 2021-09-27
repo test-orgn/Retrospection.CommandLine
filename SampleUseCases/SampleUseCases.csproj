@@ -159,5 +159,4 @@
     <Exec Command="$(ProjectDir)WebDriver.csproj.prebuild.sh $(ProjectDir)" />
   </Target>
    Argon.DataAccess.Queues.Interfaces
-
 </Project>
