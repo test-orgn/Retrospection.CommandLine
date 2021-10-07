@@ -1,5 +1,6 @@
 # Retrospection.CommandLine
 
+
 ### Version 0.0.1.0004 Release Notes
 - **Breaking change** - changed the order of parameters in the IntelliPrompt constructor
 - Started expanding SampleUseCases
